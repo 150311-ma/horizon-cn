@@ -59,7 +59,9 @@ jobs:
         shell: bash
         run: |
           cd upstream
-          git apply --3way "$GITHUB_WORKSPACE/patches/horizon-cn.patch" \
+          # 不用 --3way：partial clone（--filter=blob:none）里没有旧 blob，三方合并必然报
+          # "lacks the necessary blob"。补丁是纯 LF，上下文匹配就够了。
+          git apply --whitespace=nowarn "$GITHUB_WORKSPACE/patches/horizon-cn.patch" \
             || { echo "::error::补丁打不上，上游这个版本的代码变了"; git apply --reject --whitespace=nowarn "$GITHUB_WORKSPACE/patches/horizon-cn.patch" || true; find . -name '*.rej' -exec sh -c 'echo "--- {} ---"; head -40 "{}"' \; ; exit 1; }
 
       # 推广位的图不在补丁里（二进制，diff 带不了），从本仓库复制过去
