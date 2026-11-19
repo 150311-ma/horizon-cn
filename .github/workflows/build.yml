@@ -51,7 +51,8 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/horizon-rust/horizon.git upstream
           cd upstream
           git sparse-checkout init --cone
-          git sparse-checkout set crates launcher packaging tools xtask .cargo mods docs nix exporters
+          # third_party 里有 libmimalloc-sys 这类被 patch 进来的本地 crate，游戏本体编不过就是因为缺它
+          git sparse-checkout set crates launcher packaging tools xtask .cargo mods docs nix exporters third_party
           git checkout "${{ steps.upstream.outputs.tag }}"
 
       - name: 打补丁
