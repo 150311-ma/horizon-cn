@@ -1443,18 +1443,6 @@ index b9301b2..0d8130d 100644
   "horizon-mod-api-gen",
   "horizon-mod-package",
   "serde",
-diff --git a/launcher/assets/promo/donate.jpg b/launcher/assets/promo/donate.jpg
-new file mode 100644
-index 0000000..756d368
-Binary files /dev/null and b/launcher/assets/promo/donate.jpg differ
-diff --git a/launcher/assets/promo/pcv-wide.jpg b/launcher/assets/promo/pcv-wide.jpg
-new file mode 100644
-index 0000000..c492e51
-Binary files /dev/null and b/launcher/assets/promo/pcv-wide.jpg differ
-diff --git a/launcher/assets/promo/pcv.png b/launcher/assets/promo/pcv.png
-new file mode 100644
-index 0000000..9040039
-Binary files /dev/null and b/launcher/assets/promo/pcv.png differ
 diff --git a/launcher/examples/relink.rs b/launcher/examples/relink.rs
 new file mode 100644
 index 0000000..f91cac2
