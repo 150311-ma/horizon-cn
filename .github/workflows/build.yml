@@ -80,6 +80,22 @@ jobs:
           ls -la upstream/launcher/assets/promo upstream/launcher/lang/zh.json
 
       # ── 构建 ────────────────────────────────────────────────────
+      # 用 MinGW 而不是 MSVC：MSVC 编出来的 gpui 在用户机器上 DirectX 起不来
+      # （`DirectWrite: 系统找不到指定的路径`，2026-11-19），同一个程序用 MinGW 编就能跑。
+      - name: 装 MinGW 工具链
+        if: steps.check.outputs.build == 'true'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          path-type: inherit
+          install: mingw-w64-x86_64-gcc
+
+      - name: 加 gnu 编译目标
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        run: rustup target add x86_64-pc-windows-gnu
+
       - uses: Swatinem/rust-cache@v2
         if: steps.check.outputs.build == 'true'
         with:
@@ -91,9 +107,15 @@ jobs:
         if: steps.check.outputs.build == 'true'
         shell: bash
         working-directory: upstream
+        env:
+          CC: gcc
+          CXX: g++
         run: |
-          # debug-assertions 关掉着色器预编译，因此不需要 fxc.exe，runner 上更稳
-          cargo build --manifest-path launcher/Cargo.toml --release \
+          export PATH="$MSYS2_LOCATION/mingw64/bin:$PATH"
+          gcc --version | head -1
+          # debug-assertions 关掉着色器预编译，因此不需要 fxc.exe，MinGW 下也没有 fxc
+          cargo build --target x86_64-pc-windows-gnu \
+            --manifest-path launcher/Cargo.toml --release \
             --config 'profile.release.debug-assertions=true' 2>&1 | tail -30
 
       # 游戏本体也编，而且必须和启动器同一个 commit：启动器靠版本目录里
@@ -103,8 +125,12 @@ jobs:
         if: steps.check.outputs.build == 'true'
         shell: bash
         working-directory: upstream
+        env:
+          CC: gcc
+          CXX: g++
         run: |
-          cargo build --release \
+          export PATH="$MSYS2_LOCATION/mingw64/bin:$PATH"
+          cargo build --target x86_64-pc-windows-gnu --release \
             --config 'profile.release.debug-assertions=true' \
             -p horizon-official -p horizon-prepare -p horizon-client-lib -p horizon-official-servers \
             2>&1 | tail -40
@@ -119,8 +145,8 @@ jobs:
           TAG="${{ steps.upstream.outputs.tag }}"
           DEST="out/Horizon-CN-$TAG"
           mkdir -p "$DEST/game/crates" "$DEST/game/exporters"
-          cp upstream/launcher/target/release/horizon-launcher.exe "$DEST/"
-          G=upstream/target/release
+          cp upstream/launcher/target/x86_64-pc-windows-gnu/release/horizon-launcher.exe "$DEST/"
+          G=upstream/target/x86_64-pc-windows-gnu/release
           cp "$G/horizon-official.exe"         "$DEST/game/horizon-client.exe"
           cp "$G/horizon-prepare.exe"          "$DEST/game/horizon-prepare.exe"
           cp "$G/horizon-ctl.exe"              "$DEST/game/horizon-ctl.exe"
