@@ -931,6 +931,34 @@ index 0000000..c6e6e1e
 +        assert!(!hosts_in(".", "github.com"), "an empty entry matches nothing");
 +    }
 +}
+diff --git a/crates/horizon-client/src/game.rs b/crates/horizon-client/src/game.rs
+index 55bd735..4223872 100644
+--- a/crates/horizon-client/src/game.rs
++++ b/crates/horizon-client/src/game.rs
+@@ -4823,8 +4823,23 @@ impl Game<'_> {
+         self.frame_graph
+             .draw(self.settings.horizon.overlay, &mut batch, &self.gui.atlas);
+         self.draw_pad_over_hud(&mut batch);
++        // 国产版：推广条画在最后，所有界面都带上（标题、选项、游戏内、物品栏……）。
++        self.draw_promo_strip(&mut batch);
+         batch
+     }
++
++    /// 国产版的推广条：底部正中一行，每个界面都画。
++    ///
++    /// 文案用 ASCII：游戏内字体走的是位图字体加 Unifont 兜底，中文字形不保证每台机器都有，
++    /// 而这一行是给所有人看的，宁可朴素也不要显示成方块。颜色取原版金色的偏暗一档，
++    /// 压在草地和夜晚上都不刺眼。
++    fn draw_promo_strip(&mut self, batch: &mut HudBatch) {
++        const TEXT: &str = "PCV 3.0.0 | github.com/150311-ma/PCV";
++        let width = HudBatch::text_width(&self.gui.atlas, TEXT);
++        let x = ((batch.width - width) / 2.0).max(2.0).floor();
++        let y = (batch.height - 11.0).max(0.0);
++        batch.text(&self.gui.atlas, TEXT, x, y, 0xFFE0C070, true);
++    }
+     fn hud_layers(&mut self, size: [u32; 2]) -> HudBatch {
+         self.input_hud_begin();
+         let mut batch = HudBatch::new(size, self.settings.gui_scale_inputs());
 diff --git a/crates/horizon-port-pack/Cargo.toml b/crates/horizon-port-pack/Cargo.toml
 index c9c5afa..b590dc1 100644
 --- a/crates/horizon-port-pack/Cargo.toml

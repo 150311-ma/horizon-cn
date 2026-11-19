@@ -51,7 +51,7 @@ jobs:
           git clone --filter=blob:none --no-checkout https://github.com/horizon-rust/horizon.git upstream
           cd upstream
           git sparse-checkout init --cone
-          git sparse-checkout set crates launcher packaging tools xtask .cargo mods docs nix
+          git sparse-checkout set crates launcher packaging tools xtask .cargo mods docs nix exporters
           git checkout "${{ steps.upstream.outputs.tag }}"
 
       - name: 打补丁
@@ -65,7 +65,7 @@ jobs:
             || { echo "::error::补丁打不上，上游这个版本的代码变了"; git apply --reject --whitespace=nowarn "$GITHUB_WORKSPACE/patches/horizon-cn.patch" || true; find . -name '*.rej' -exec sh -c 'echo "--- {} ---"; head -40 "{}"' \; ; exit 1; }
 
       # 推广位的图不在补丁里（二进制，diff 带不了），从本仓库复制过去
-      - name: 放推广图
+      - name: 放推广图与语言表
         if: steps.check.outputs.build == 'true'
         shell: bash
         run: |
@@ -82,7 +82,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         if: steps.check.outputs.build == 'true'
         with:
-          workspaces: upstream/launcher
+          workspaces: |
+            upstream
+            upstream/launcher
 
       - name: 编译启动器
         if: steps.check.outputs.build == 'true'
@@ -93,16 +95,52 @@ jobs:
           cargo build --manifest-path launcher/Cargo.toml --release \
             --config 'profile.release.debug-assertions=true' 2>&1 | tail -30
 
+      # 游戏本体也编，而且必须和启动器同一个 commit：启动器靠版本目录里
+      # crates/horizon-prepare 的 OUTPUT_VERSION 判断资源能不能用，两边对不上就会判
+      # "资源不可用"，然后反复准备、最后启动不了（2026-11-19 就是这么崩的）。
+      - name: 编译游戏本体
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        working-directory: upstream
+        run: |
+          cargo build --release \
+            --config 'profile.release.debug-assertions=true' \
+            -p horizon-official -p horizon-prepare -p horizon-client-lib -p horizon-official-servers \
+            2>&1 | tail -40
+
+      # ── 打包 ────────────────────────────────────────────────────
+      # 解压后是一个目录：启动器在根，游戏在 game/，把 game/ 整个放进
+      # %APPDATA%\horizon-launcher\versions\ 下就能被认出来。
+      - name: 组装
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        run: |
+          TAG="${{ steps.upstream.outputs.tag }}"
+          DEST="out/Horizon-CN-$TAG"
+          mkdir -p "$DEST/game/crates" "$DEST/game/exporters"
+          cp upstream/launcher/target/release/horizon-launcher.exe "$DEST/"
+          G=upstream/target/release
+          cp "$G/horizon-official.exe"         "$DEST/game/horizon-client.exe"
+          cp "$G/horizon-prepare.exe"          "$DEST/game/horizon-prepare.exe"
+          cp "$G/horizon-ctl.exe"              "$DEST/game/horizon-ctl.exe"
+          cp "$G/horizon-official-servers.exe" "$DEST/game/horizon-server.exe" 2>/dev/null || true
+          # 源码：启动器从 lib.rs 读 OUTPUT_VERSION，缺了就只能靠指纹表，表里没有就崩
+          cp -r upstream/crates/horizon-prepare "$DEST/game/crates/"
+          cp -r upstream/exporters/. "$DEST/game/exporters/" 2>/dev/null || true
+          cp upstream/research-lock.json "$DEST/game/" 2>/dev/null || true
+          : > "$DEST/game/.installed"
+          cp README.md "$DEST/README.txt"
+          cp -r assets/promo "$DEST/promo"
+          echo "--- 目录 ---"
+          ls -la "$DEST" "$DEST/game"
+
       - name: 打 zip
         if: steps.check.outputs.build == 'true'
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path out | Out-Null
-          Copy-Item upstream/launcher/target/release/horizon-launcher.exe out/
-          # 文件名用 ASCII：旧版 shell 写中文名会变成乱码（解压出来是 ޻¦µÄ.txt）
-          Copy-Item README.md out/README.txt -ErrorAction SilentlyContinue
-          Copy-Item assets/promo -Destination out/promo -Recurse -ErrorAction SilentlyContinue
-          Compress-Archive -Path out/* -DestinationPath "Horizon-CN-${{ steps.upstream.outputs.tag }}.zip" -Force
+          $TAG = "${{ steps.upstream.outputs.tag }}"
+          Compress-Archive -Path "out/Horizon-CN-$TAG/*" -DestinationPath "Horizon-CN-$TAG.zip" -Force
+          Get-Item "Horizon-CN-$TAG.zip" | Select-Object Name, Length
 
       - name: 发布
         if: steps.check.outputs.build == 'true'
@@ -114,6 +152,12 @@ jobs:
           gh release create "cn-$TAG" "Horizon-CN-$TAG.zip" \
             --repo "${{ github.repository }}" \
             --title "Horizon 国产版 · $TAG" \
-            --notes "基于上游 $TAG 构建：下载与更新走国内镜像、界面完整中文、商店移除、推广位换成自己的轮播。
+            --notes "基于上游 $TAG 构建，启动器与游戏同一 commit。
+
+          **启动器**：下载与更新走国内镜像、界面完整中文、商店移除、推广位换成自己的轮播。
+          **游戏**：界面底部一行推广条，所有页面可见。
+
+          \`game/\` 整个放进 \`%APPDATA%\\horizon-launcher\\versions\\\` 下即可。
+
           $(gh release view "$TAG" --repo horizon-rust/horizon --json body -q .body 2>/dev/null | head -40)" \
             --latest
