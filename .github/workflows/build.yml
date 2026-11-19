@@ -110,6 +110,9 @@ jobs:
         env:
           CC: gcc
           CXX: g++
+          # 跨工具链目标必须显式指定链接器：不然 C 依赖（vswhom 等）由 gcc 编成 MinGW 的
+          # COFF，却交给 MSVC 的 link.exe 去链，报 LNK1143 "invalid or corrupt file"。
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
         run: |
           export PATH="$MSYS2_LOCATION/mingw64/bin:$PATH"
           gcc --version | head -1
@@ -128,6 +131,7 @@ jobs:
         env:
           CC: gcc
           CXX: g++
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
         run: |
           export PATH="$MSYS2_LOCATION/mingw64/bin:$PATH"
           cargo build --target x86_64-pc-windows-gnu --release \
