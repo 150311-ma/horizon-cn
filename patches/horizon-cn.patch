@@ -1,15 +1,3 @@
-diff --git a/Cargo.lock b/Cargo.lock
-index 65a3b7f..c4cecdc 100644
---- a/Cargo.lock
-+++ b/Cargo.lock
-@@ -2633,6 +2633,7 @@ dependencies = [
- name = "horizon-port-pack"
- version = "0.1.0"
- dependencies = [
-+ "horizon-addresses",
-  "horizon-mod-api",
-  "horizon-mod-api-gen",
-  "horizon-mod-package",
 diff --git a/cn/README.md b/cn/README.md
 new file mode 100644
 index 0000000..bd9acc9
@@ -510,10 +498,10 @@ index 0000000..eaf3b8d
 +}
 +Write-Host "`n注意：游戏本体不含 Minecraft 的文件，需要你自己拥有 Minecraft: Java 版并由启动器准备。" -ForegroundColor Yellow
 diff --git a/crates/horizon-addresses/src/lib.rs b/crates/horizon-addresses/src/lib.rs
-index d8a9f44..f842f0c 100644
+index d8a9f44..f5321d4 100644
 --- a/crates/horizon-addresses/src/lib.rs
 +++ b/crates/horizon-addresses/src/lib.rs
-@@ -4,6 +4,59 @@
+@@ -4,6 +4,63 @@
  //!
  //! This is a Horizon-layer crate: the engine and the platform never depend on it. Platform code
  //! that talks to a service gets the address passed in from a Horizon crate.
@@ -524,6 +512,10 @@ index d8a9f44..f842f0c 100644
 +//! seeing them.
 +
 +pub mod mirror;
++
++/// PCV, the project whose banner the promotion slot shows: clicking that card opens its
++/// repository. PCV is a PCL (Minecraft launcher) shell — "只负责装框架的壳".
++pub const PCV_GITHUB: &str = "https://github.com/150311-ma/PCV";
 +
 +/// GitHub's public search, used by the launcher's promotion slot to pick a Minecraft project to
 +/// show. `topic:minecraft` rather than a text search: the word alone matches book lists and chat
@@ -939,304 +931,6 @@ index 0000000..c6e6e1e
 +        assert!(!hosts_in(".", "github.com"), "an empty entry matches nothing");
 +    }
 +}
-diff --git a/crates/horizon-client/assets/horizon/lang/zh_cn.json b/crates/horizon-client/assets/horizon/lang/zh_cn.json
-index 1ed7d38..91676d8 100644
---- a/crates/horizon-client/assets/horizon/lang/zh_cn.json
-+++ b/crates/horizon-client/assets/horizon/lang/zh_cn.json
-@@ -173,7 +173,7 @@
-   "Next": "下一步",
-   "No controller": "无手柄",
-   "No cost": "无开销",
--  "No entity occlusion culling.": "不进行实体遮挡剔除。",
-+  "No entity occlusion culling.": "不做实体遮挡剔除。",
-   "No settings match.": "没有匹配的设置。",
-   "No shader packs yet: open the pack folder and put some in it.": "还没有着色器包：打开包文件夹并放入一些。",
-   "Not bound: press this row, then the button that should do it.": "未绑定：点击此行，然后按下应执行该操作的按键。",
-@@ -977,12 +977,12 @@
-   "horizon.studio.record.error": "Studio 录制错误：%s",
-   "horizon.studio.record.saved": "Studio 录制已保存：%s",
-   "horizon.studio.record.started": "Studio 录制已开始：%s",
--  "horizon.studio.record.status.active": "Studio 录制进行中 — %s 秒，%s 个数据包，%s KB（%s）",
--  "horizon.studio.record.status.inactive": "Studio 录制未进行",
-+  "horizon.studio.record.status.active": "Studio 正在录制 — %s 秒，%s 个数据包，%s KB（%s）",
-+  "horizon.studio.record.status.inactive": "Studio 未在录制",
-   "horizon.studio.record.usage": "用法：/studio record <start [name]|stop|status>",
-   "horizon.studio.refresh": "刷新",
-   "horizon.studio.replay.closed": "Studio 回放已关闭",
--  "horizon.studio.replay.inactive": "没有进行中的 Studio 回放",
-+  "horizon.studio.replay.inactive": "没有正在进行的 Studio 回放",
-   "horizon.studio.replay.open.usage": "用法：/studio replay open <PATH>",
-   "horizon.studio.replay.open_error": "无法打开回放：%s",
-   "horizon.studio.replay.opened": "Studio 回放已打开：%s（%s 秒，%s 个数据包）",
-@@ -1047,5 +1047,267 @@
-   "horizon.options.impulse_triggers": "脉冲扳机",
-   "A tick when you break a block, as in Bedrock.": "当你破坏方块时，它会像 Bedrock 一样振动。",
-   "A short buzz when you split a stack, as in Bedrock.": "拆分堆叠时短暂振动，如同 Bedrock。",
--  "An Xbox One controller's triggers buzz with its handles.": "Xbox One 控制器的扳机会随握把一起振动。"
-+  "An Xbox One controller's triggers buzz with its handles.": "Xbox One 控制器的扳机会随握把一起振动。",
-+  "horizon.no_resources.title": "没有准备好的游戏文件",
-+  "horizon.no_resources.prepare": "用 horizon-prepare --prepare 准备，或传入 --resources <文件夹>。",
-+  "horizon.no_resources.looked_in": "%s 中没有准备好的游戏文件",
-+  "horizon.no_resources.quit": "退出",
-+  "horizon.get_the_game.title": "请从启动器启动 Horizon",
-+  "horizon.get_the_game.about": "这是 Horizon 启动器安装并启动的游戏。单独跑的话它没有 Minecraft 的任何文件，开不起来。",
-+  "horizon.get_the_game.minecraft": "Horizon 需要你自己拥有的 Minecraft: Java 版。启动器会为你登录，并从中准备游戏文件。",
-+  "horizon.get_the_game.download": "在 %s 下载启动器，然后在其中按「开始游戏」。",
-+  "horizon.get_the_game.button": "下载启动器",
-+  "horizon.options.radial_mode": "轮盘菜单",
-+  "horizon.options.radial_mode.about": "按住开启键打开轮盘菜单，或按一次打开、再按一次关闭。",
-+  "horizon.options.radial_mode.hold.about": "按住开启键，松开即执行摇杆指向的操作。",
-+  "horizon.options.radial_mode.toggle.about": "按开启键打开；按 A 或再按开启键执行摇杆指向的操作，按 B 关闭。",
-+  "horizon.options.radial_stick": "轮盘菜单用哪个摇杆选择",
-+  "horizon.options.radial_stick.about": "用于指向轮盘菜单槽位的摇杆。",
-+  "horizon.options.radial_stick.right": "右摇杆",
-+  "horizon.options.radial_stick.left": "左摇杆",
-+  "horizon.options.radial_stick.either": "任一摇杆",
-+  "horizon.options.radial_stick.right.about": "右摇杆指向槽位；左摇杆仍可移动。",
-+  "horizon.options.radial_stick.left.about": "由左摇杆指向，人站着不动。方向键右键正好在这个拇指下：请在「轮盘菜单」页面挑一个开启键。",
-+  "horizon.options.radial_stick.either.about": "最后推动的摇杆负责指向；两个摇杆都不再移动或转向。只有肩键、扳机键或 View 键能打开菜单。",
-+  "horizon.touch.sprint": "疾跑",
-+  "horizon.touch.jump": "跳跃",
-+  "horizon.touch.up": "上",
-+  "horizon.touch.down": "下",
-+  "horizon.touch.sneak": "潜行",
-+  "horizon.touch.dismount": "下坐骑",
-+  "horizon.touch.attack": "攻击",
-+  "horizon.touch.use": "使用",
-+  "horizon.touch.chat": "聊天",
-+  "horizon.touch.settings": "触屏",
-+  "horizon.touch.swap": "交换",
-+  "horizon.touch.shield": "盾牌",
-+  "horizon.pages.controller_radial": "轮盘菜单",
-+  "horizon.radial.page.general": "通用",
-+  "horizon.radial.page.camera": "视角",
-+  "horizon.radial.release_stick": "松开摇杆",
-+  "horizon.radial.action.key_inventory": "物品栏",
-+  "horizon.radial.action.key_chat": "聊天",
-+  "horizon.radial.action.key_command": "命令",
-+  "horizon.radial.action.key_advancements": "进度",
-+  "horizon.radial.action.key_togglePerspective": "视角",
-+  "horizon.radial.action.key_swapOffhand": "交换双手",
-+  "horizon.radial.action.key_drop": "丢弃",
-+  "horizon.radial.action.key_pickItem": "选取方块",
-+  "horizon.radial.action.key_screenshot": "截图",
-+  "horizon.radial.action.key_toggleGui": "隐藏 HUD",
-+  "horizon.radial.action.key_smoothCamera": "电影视角",
-+  "horizon.radial.action.key_socialInteractions": "社交",
-+  "horizon.radial.action.key_emote": "表情",
-+  "horizon.radial.action.pad_hotbarPrevious": "上一格",
-+  "horizon.radial.action.pad_hotbarNext": "下一格",
-+  "horizon.radial.action.key_fullscreen": "全屏",
-+  "horizon.radial.action.key_quickActions": "快捷操作",
-+  "horizon.radial.action.key_debug_overlay": "调试屏幕",
-+  "horizon.radial.missing": "缺失",
-+  "horizon.radial.why.missing": "未知操作",
-+  "horizon.radial.why.cosmetics": "需要开启外观",
-+  "horizon.radial.why.quick_actions": "该服务器没有快捷操作",
-+  "horizon.radial.why.social": "仅在服务器中可用",
-+  "horizon.radial.next": "→ %s",
-+  "horizon.radial.state.first_person": "第一人称",
-+  "horizon.radial.state.third_person_back": "第三人称",
-+  "horizon.radial.state.third_person_front": "正面视角",
-+  "horizon.radial.state.shown": "显示",
-+  "horizon.radial.state.hidden": "隐藏",
-+  "horizon.radial.state.on": "开",
-+  "horizon.radial.state.off": "关",
-+  "horizon.radial.pick_title": "选择一个操作",
-+  "horizon.radial.group.actions": "操作",
-+  "horizon.radial.pick.slot": "%s 槽位，位于「%s」",
-+  "horizon.radial.pick.about": "把这个操作放进该槽位并返回。槽位原本的操作会被标出来。",
-+  "horizon.radial.pick.current": "当前",
-+  "horizon.radial.missing.about": "本游戏不认识操作 %s：该槽位保留它，但不执行任何操作。按一下或按右键可在此放入其他操作。",
-+  "horizon.radial.page.new": "新建页面",
-+  "horizon.pages.open.controller_radial": "轮盘菜单……",
-+  "horizon.radial.group.slots": "槽位",
-+  "horizon.radial.group.page": "页面",
-+  "horizon.radial.group.all": "全部页面",
-+  "horizon.radial.empty": "空",
-+  "horizon.radial.page_of": "第 %s 页，共 %s 页。按住开启键时，每个槽位对应选择摇杆的一个方向。",
-+  "horizon.radial.slot.0": "上",
-+  "horizon.radial.slot.1": "右上",
-+  "horizon.radial.slot.2": "右",
-+  "horizon.radial.slot.3": "右下",
-+  "horizon.radial.slot.4": "下",
-+  "horizon.radial.slot.5": "左下",
-+  "horizon.radial.slot.6": "左",
-+  "horizon.radial.slot.7": "左上",
-+  "horizon.radial.slot.about": "这个方向执行的操作。按一下列出所有操作，按右键选下一个，按左键或 Shift 点击选上一个。",
-+  "horizon.radial.rename": "重命名页面",
-+  "horizon.radial.rename.about": "为这个页面取一个你自己的名字。",
-+  "horizon.radial.name_title": "命名此页面",
-+  "horizon.radial.new_page.about": "在最后一页之后添加一个空页面，并显示它。",
-+  "horizon.radial.new_page.full": "菜单最多只能有 %s 页。",
-+  "horizon.radial.delete_page": "删除页面",
-+  "horizon.radial.delete_page.about": "立即删除此页面及其槽位。撤销可以恢复。",
-+  "horizon.radial.delete_page.last": "菜单至少保留一页。",
-+  "horizon.radial.reset": "重置所有页面",
-+  "horizon.radial.reset.about": "立即恢复「通用」和「视角」两页并移除其余页面。撤销可以恢复。",
-+  "horizon.radial.reset.default": "页面已经是默认设置。",
-+  "horizon.radial.opener": "开启键",
-+  "horizon.radial.opener.about": "按住以打开菜单的按钮。先按这里，再按要用的手柄按钮：肩键或方向键，不能是 A、B、X、Y 或右摇杆，它们用于转向和取消。",
-+  "horizon.radial.opener.about.left": "按住以打开菜单的按钮。先按这里，再按要用的手柄按钮：肩键、A、X 或 Y，不能是方向键或左摇杆（用于转向），也不能是 B（取消）。",
-+  "horizon.radial.opener.about.either": "按住以打开菜单的按钮。先按这里，再按要用的手柄按钮：肩键、扳机键或 View 键；两个拇指都用于转向，B 键取消。",
-+  "horizon.radial.unbound": "没有按钮能打开菜单（负责选择的拇指下的按钮会被排除）：先按这里，再按一个手柄按钮。",
-+  "horizon.radial.conflict": "与其他操作共用：游戏中菜单会占用该按钮。按一下可另选。",
-+  "Radial Menu": "轮盘菜单",
-+  "Named pages of eight actions, held open with a button.": "按住按钮打开的具名页面，每页八个操作。",
-+  "Horizon Preset": "Horizon 预设",
-+  "Dynamic Resolution": "动态分辨率",
-+  "Target FPS": "目标帧率",
-+  "%s nits": "%s 尼特",
-+  "Auto (%s nits)": "自动（%s 尼特）",
-+  "horizon.hdr.look": "风格",
-+  "horizon.hdr.look.horizon": "Horizon",
-+  "horizon.hdr.look.vanilla": "原版",
-+  "Horizon: light sources and the sun shine past white. Vanilla: just as SDR.": "Horizon：光源和太阳的亮度超过纯白。原版：与 SDR 相同。",
-+  "Full Performance": "全性能",
-+  "The shader pack lights the world. Pick it under Shaders.": "由光影包为世界提供光照。可在「光影」中选择。",
-+  "The shader pack's picture is shown at Paper White.": "光影包的画面按纸白亮度显示。",
-+  "Lava, fire and the sun shine brighter than white. Needs an HDR display.": "熔岩、火焰和太阳比纯白更亮。需要 HDR 显示器。",
-+  "How bright the HUD and menus are. Auto: at paper white.": "HUD 和菜单的亮度。自动：按纸白亮度。",
-+  "Raises Resolution Scale toward 100% while the frame rate allows it.": "在帧率允许时把分辨率缩放提高到 100%。",
-+  "The frame rate Dynamic Resolution keeps.": "动态分辨率要维持的帧率。",
-+  "Auto uses the peak Windows reports. Calibrate if highlights look clipped.": "自动使用 Windows 报告的峰值亮度。如果高光出现裁切，请校准。",
-+  "HDR output stopped the game the last time it started with this graphics driver. Choose a mode to try again.": "上次用这个显卡驱动启动时，HDR 输出导致游戏退出。请选择一种模式重试。",
-+  "horizon.osk.new_line": "换行",
-+  "horizon.osk.complete": "完成",
-+  "Parallel Tick": "并行刻",
-+  "Shares your world's tick among threads. Auto: only while that is faster.": "把世界的刻计算分摊到多个线程。自动：仅在更快时启用。",
-+  "Ray tracing: %s Until then the pack draws without it.": "光线追踪：%s 在此之前光影包不使用它渲染。",
-+  "This GPU or graphics API has no ray tracing: the pack draws without it.": "此显卡或图形 API 不支持光线追踪：光影包将不使用它渲染。",
-+  "Ray tracing is off: HORIZON_RAY_TRACING is set to something other than 1.": "光线追踪已关闭：HORIZON_RAY_TRACING 被设为 1 以外的值。",
-+  "Whole pack": "整个光影包",
-+  "Reset all": "全部重置",
-+  "Every option is at its default already.": "所有选项都已是默认值。",
-+  "How much speed, sprinting and status effects change the field of view.": "移动速度、疾跑和状态效果对视场角的影响程度。",
-+  "horizon.pad.action.radial": "轮盘菜单",
-+  "horizon.debug.pass_detail.title": "Horizon 渲染阶段详情（%s）",
-+  "horizon.debug.pass_detail.inside_passes": "阶段内的时间戳",
-+  "horizon.debug.pass_detail.separate_passes": "独立阶段，会增加 GPU 时间",
-+  "horizon.debug.pass_detail.part": "%s › %s：%s 毫秒",
-+  "horizon.debug.pass_detail.counters": "%s：%s 个片元，每像素 %s，%s 个顶点，保留 %s/%s 个三角形",
-+  "horizon.debug.pass_detail.no_counters": "GPU 计数器：仅 Vulkan 支持",
-+  "horizon.perf.started": "正在分析客户端和服务器。%s",
-+  "horizon.perf.uploading": "正在上传分析结果……",
-+  "horizon.perf.shared": "已分享：%s %s",
-+  "horizon.perf.upload_failed": "无法分享分析结果：%s。%s",
-+  "horizon.perf.upload_interrupted": "上传线程已停止",
-+  "horizon.perf.unavailable": "此版本不支持打开和分享分析结果。",
-+  "horizon.perf.share_missing": "本次会话还没有保存分析结果。%s",
-+  "horizon.perf.saved": "分析结果已保存（%s 秒）。%s",
-+  "horizon.perf.open_button": "[打开]",
-+  "horizon.perf.open_hover": "在浏览器中打开此分析结果。它只会发送到你自己的浏览器一次，不会发往别处。",
-+  "horizon.perf.share_button": "[分享]",
-+  "horizon.perf.share_hover": "上传此分析结果并获得分享链接。在你点击之前不会上传任何内容。",
-+  "horizon.perf.opened": "已在浏览器中打开",
-+  "horizon.perf.open_failed": "无法打开分析结果：%s。%s",
-+  "horizon.perf.not_found": "没有名为 %s 的已保存分析结果。",
-+  "horizon.perf.error": "性能分析器：%s",
-+  "horizon.perf.not_horizon": "该服务器没有运行 Horizon",
-+  "horizon.perf.denied": "服务器端分析需要 4 级管理员权限",
-+  "horizon.perf.already_running": "服务器已经在做性能分析",
-+  "horizon.perf.not_running": "你没有正在运行的服务器端分析",
-+  "horizon.perf.failed": "服务器无法写入分析结果；请查看其日志",
-+  "horizon.perf.part_incomplete": "服务器端的分析数据没有完整到达",
-+  "horizon.recipes.fuel.options": "按住 SHIFT 固定此提示，然后点击材料查看配方。",
-+  "horizon.recipes.fuel.any": "任意燃料",
-+  "horizon.recipes.fuel.minecraft": "Minecraft",
-+  "horizon.perf.idle": "未在分析。%s",
-+  "horizon.perf.marked": "已标记 %s",
-+  "horizon.perf.started.client": "正在分析客户端。%s",
-+  "horizon.perf.started.server": "正在分析服务器。%s",
-+  "horizon.perf.saving": "正在保存分析结果……",
-+  "horizon.perf.running.client": "正在分析客户端 %s 秒。%s",
-+  "horizon.perf.running.server": "正在分析服务器 %s 秒。%s",
-+  "horizon.perf.running.both": "正在分析客户端和服务器 %s 秒。%s",
-+  "horizon.perf.client_only": "仅分析客户端：%s",
-+  "horizon.perf.stop_button": "[停止]",
-+  "horizon.perf.stop_hover": "停止分析并保存结果。",
-+  "horizon.perf.start_button": "[开始]",
-+  "horizon.perf.start_hover": "开始性能分析。",
-+  "horizon.perf.folder_button": "[文件夹]",
-+  "horizon.perf.folder_hover": "在文件夹中显示 %s。",
-+  "horizon.perf.copy_button": "[复制]",
-+  "horizon.perf.copy_hover": "复制链接。",
-+  "horizon.perf.retry_button": "[重试]",
-+  "horizon.perf.retry_hover": "重新尝试上传。分析结果仍保存在你的电脑上。",
-+  "horizon.perf.link_hover": "在浏览器中打开已分享的分析结果。",
-+  "horizon.attribute.modifier.disabled": "%s：已禁用",
-+  "horizon.attribute.modifier.enabled": "%s：已启用",
-+  "horizon.attribute.modifier.invalid": "%s：无效",
-+  "horizon.biome_regions.adopt.button": "使用已安装的生物群系区域",
-+  "horizon.biome_regions.adopt.confirm": "使用已安装的区域",
-+  "horizon.biome_regions.adopt.description": "新区块会使用当前已安装模组的生物群系区域，已经卸掉的模组所提供的区域会被丢弃。已完成的区块保留原有生物群系和方块。还在生成的区块完成时可能用上新的区域；紧挨旧区块的新区块，在地表、装饰和结构上可能对不上。这个选择会存进世界。",
-+  "horizon.biome_regions.adopt.title": "使用已安装的生物群系区域？",
-+  "horizon.biome_regions.missing.description": "此世界含有来自未安装模组的生物群系区域。现有区块保持原样；其中的新区块需要你做出选择。",
-+  "horizon.biome_regions.missing.dont_open": "不打开",
-+  "horizon.biome_regions.missing.open_vanilla": "以原版生物群系打开",
-+  "horizon.biome_regions.missing.region": "区域 %s（模组 %s）",
-+  "horizon.biome_regions.missing.title": "缺少生物群系模组",
-+  "horizon.biome_regions.save_failed": "无法保存世界的选择：%s",
-+  "horizon.datapack.required": "数据包 %s 是必需的，无法禁用",
-+  "horizon.fluid.amount": "%s mB",
-+  "horizon.fluid.unknown": "未知流体",
-+  "horizon.missing_mods.backup_failed": "无法创建备份，因此未打开世界：%s",
-+  "horizon.missing_mods.backup_open": "备份并打开",
-+  "horizon.missing_mods.count": "缺少的模组：%s",
-+  "horizon.missing_mods.description": "这个世界是用当前没加载的模组保存的。打开它会永久删掉这些模组的方块，以及方块里装的一切。请先备份，或者等模组装回来再开。",
-+  "horizon.missing_mods.dont_open": "不打开",
-+  "horizon.missing_mods.entry": "%s，版本 %s",
-+  "horizon.missing_mods.entry_kinds": "%s（%s）",
-+  "horizon.missing_mods.entry_unknown": "%s，版本未知",
-+  "horizon.missing_mods.kind.blocks": "其方块",
-+  "horizon.missing_mods.kind.code": "代码模组",
-+  "horizon.missing_mods.kind.content": "内容模组",
-+  "horizon.missing_mods.mod": "%s（保存于 %s）：%s",
-+  "horizon.missing_mods.open": "不备份直接打开",
-+  "horizon.missing_mods.server.allowed": "仍按 --%s 或 server.toml 中 [missing_mods] 的 allow 打开世界：这些模组的方块将被移除",
-+  "horizon.missing_mods.server.help": "打开由当前未加载的模组保存的世界，并移除它们的方块",
-+  "horizon.missing_mods.server.refused": "世界没有打开：打开它会永久删掉这些模组的方块和里面的物品。\n请把缺少的模组装回去，或者先备份世界文件夹。\n仍然要打开的话，用 --%s 启动服务器，或在 server.toml 的 [missing_mods] 下设 allow = true",
-+  "horizon.missing_mods.title": "缺少模组",
-+  "horizon.missing_mods.unknown_version": "未知版本",
-+  "horizon.modprofile.alreadyRunning": "模组性能分析已经开始了。",
-+  "horizon.modprofile.inHook": "无法在模组回调内部停止分析。",
-+  "horizon.modprofile.noReport": "没有已完成模组性能分析的报告。",
-+  "horizon.modprofile.notRunning": "模组性能分析未在运行。",
-+  "horizon.modprofile.started": "模组性能分析已开始。",
-+  "horizon.modprofile.stopped": "模组性能分析已停止。已保存 %s",
-+  "horizon.modprofile.writeFailed": "无法保存模组性能分析：%s",
-+  "horizon.mods.extra": "这些模组不在该服务器上：\n%s",
-+  "horizon.mods.mismatch": "你的模组与该服务器不一致。",
-+  "horizon.mods.missing": "安装这些模组才能加入：\n%s",
-+  "horizon.mods.screen.authors": "作者：%s",
-+  "horizon.mods.screen.config": "配置",
-+  "horizon.mods.screen.copy_id": "点击复制模组 ID",
-+  "horizon.mods.screen.copy_version": "点击复制模组版本",
-+  "horizon.mods.screen.credits": "鸣谢：%s",
-+  "horizon.mods.screen.homepage": "主页",
-+  "horizon.mods.screen.horizon.description": "Horizon 是用 Rust 重新实现的 Minecraft: Java 版。horizon-mods 文件夹中的模组在沙箱中运行并扩展它。",
-+  "horizon.mods.screen.issues": "问题反馈",
-+  "horizon.mods.screen.license": "许可证：%s",
-+  "horizon.mods.screen.license.none": "保留所有权利",
-+  "horizon.mods.screen.narration": "模组",
-+  "horizon.mods.screen.off": "未加载：在启动器里打开它。",
-+  "horizon.mods.screen.search": "搜索",
-+  "horizon.mods.screen.sort.a_to_z": "A-Z",
-+  "horizon.mods.screen.sort.a_to_z.hover": "当前按 A 到 Z 排序：点击改为 Z 到 A",
-+  "horizon.mods.screen.sort.z_to_a": "Z-A",
-+  "horizon.mods.screen.sort.z_to_a.hover": "当前按 Z 到 A 排序：点击改为 A 到 Z",
-+  "horizon.mods.screen.title": "模组",
-+  "horizon.mods.unreadable": "无法读取你的模组列表：\n%s",
-+  "horizon.mods.version": "%s（服务器 %s，你的 %s）",
-+  "horizon.mods.warning.discouraged": "不建议同时加载 %s 与 %s（版本 %s）。%s",
-+  "horizon.mods.warning.discouraged_missing": "不建议这样加载 %s（未加载 %s）。%s",
-+  "horizon.mods.warning.override_discouraged": "已应用覆盖：%s 对 %s 的清单规则改为警告而非拒绝。%s",
-+  "horizon.mods.warning.override_dropped": "已应用覆盖：%s 不再对其清单规则中的 %s 强制执行。%s",
-+  "horizon.options.menu_focus": "焦点",
-+  "horizon.options.menu_navigation": "菜单导航",
-+  "horizon.options.menu_pointer": "指针",
-+  "horizon.screenshot.canceled": "截图已取消"
- }
 diff --git a/crates/horizon-port-pack/Cargo.toml b/crates/horizon-port-pack/Cargo.toml
 index c9c5afa..b590dc1 100644
 --- a/crates/horizon-port-pack/Cargo.toml
@@ -1431,18 +1125,6 @@ index a87623a..15803d8 100644
  }
  
  /// The agent `url` is fetched with, built by `build` and then kept for the next request that names
-diff --git a/launcher/Cargo.lock b/launcher/Cargo.lock
-index b9301b2..0d8130d 100644
---- a/launcher/Cargo.lock
-+++ b/launcher/Cargo.lock
-@@ -3159,6 +3159,7 @@ dependencies = [
- name = "horizon-port-pack"
- version = "0.1.0"
- dependencies = [
-+ "horizon-addresses",
-  "horizon-mod-api-gen",
-  "horizon-mod-package",
-  "serde",
 diff --git a/launcher/examples/relink.rs b/launcher/examples/relink.rs
 new file mode 100644
 index 0000000..f91cac2
@@ -1923,7 +1605,7 @@ index 515b832..a3b1b01 100644
                              cx.notify();
                          }),
 diff --git a/launcher/src/glass_servers.rs b/launcher/src/glass_servers.rs
-index fc72b28..61e79c5 100644
+index fc72b28..65f9bc5 100644
 --- a/launcher/src/glass_servers.rs
 +++ b/launcher/src/glass_servers.rs
 @@ -810,7 +810,7 @@ impl Launcher {
@@ -1953,36 +1635,75 @@ index fc72b28..61e79c5 100644
                          this.save_settings();
                          cx.notify();
                      })),
-@@ -843,7 +843,15 @@ impl Launcher {
+@@ -843,7 +843,7 @@ impl Launcher {
                  .w(px(width + 40.))
                  .p(px(20.))
                  .child(head)
 -                .child(partner::banner_image("partner-servers", width, &t).relative()),
-+                .child(
-+                    crate::promo::banner(
-+                        "promo-servers",
-+                        width,
-+                        self.settings.partner_seen_secs,
-+                        &t,
-+                    )
-+                    .relative(),
-+                ),
++                .child(crate::promo::marquee("promo-servers", width, &t).relative()),
          )
      }
  }
+diff --git a/launcher/src/launcher_render.rs b/launcher/src/launcher_render.rs
+index a31043d..a1e2016 100644
+--- a/launcher/src/launcher_render.rs
++++ b/launcher/src/launcher_render.rs
+@@ -288,7 +288,15 @@ impl Render for Launcher {
+                             .flex_1()
+                             .min_h_0()
+                             .child(div().flex_none().w(px(frame::MARGIN + frame::RAIL)))
+-                            .child(div().flex().flex_col().flex_1().min_w_0().child(page))
++                            .child(
++                                div()
++                                    .flex()
++                                    .flex_col()
++                                    .flex_1()
++                                    .min_w_0()
++                                    .child(page)
++                                    .child(crate::promo::bar(&t)),
++                            )
+                             .child(
+                                 div()
+                                     .absolute()
+@@ -314,7 +322,8 @@ impl Render for Launcher {
+                             .flex_1()
+                             .min_w_0()
+                             .child(topbar)
+-                            .child(page),
++                            .child(page)
++                            .child(crate::promo::bar(&t)),
+                     )
+             });
+         root = root.children(row_menu);
 diff --git a/launcher/src/launcher_setup.rs b/launcher/src/launcher_setup.rs
-index b55994f..3c2f9a5 100644
+index b55994f..1aae735 100644
 --- a/launcher/src/launcher_setup.rs
 +++ b/launcher/src/launcher_setup.rs
-@@ -30,7 +30,7 @@ impl Launcher {
+@@ -30,16 +30,16 @@ impl Launcher {
                  .await;
              let counting = this.update(cx, |this, cx| {
                  let s = &mut this.settings;
 -                if s.partner_hidden || s.partner_seen_secs >= partner::SEEN_BEFORE_HIDE {
-+                if s.promo_hidden || s.partner_seen_secs >= partner::SEEN_BEFORE_HIDE {
++                if s.promo_hidden {
                      return false;
                  }
-                 // On screen on every page: the card in the sidebar, the banner on Servers.
+-                // On screen on every page: the card in the sidebar, the banner on Servers.
+-                s.partner_seen_secs += 10;
+-                if s.partner_seen_secs % 60 == 0 || s.partner_seen_secs >= partner::SEEN_BEFORE_HIDE
+-                {
+-                    this.save_settings();
+-                    cx.notify();
+-                }
++                // 一直数下去：上游只数到 180 秒（「隐藏」按钮够时间出现就停），但推广位现在拿它
++                // 当轮播索引，停住就永远显示第一张。180 之后继续加不影响那个判断。
++                s.partner_seen_secs = s.partner_seen_secs.saturating_add(10);
++                // 每 10 秒重绘一次，轮播才换得动。**不落盘**：这个数是轮播索引，写文件反而
++                // 让循环在下一次存档后停住（实测数到 240 就不动了）。重启后从旧值接着数，
++                // 而「隐藏」按钮只看 > 180，不受影响。
++                cx.notify();
+                 true
+             });
+             if !matches!(counting, Ok(true)) {
 diff --git a/launcher/src/lib.rs b/launcher/src/lib.rs
 index 29ebf58..aace594 100644
 --- a/launcher/src/lib.rs
@@ -2086,10 +1807,10 @@ index 8352d2e..bf3c068 100644
  /// partner banner for good.
 diff --git a/launcher/src/promo.rs b/launcher/src/promo.rs
 new file mode 100644
-index 0000000..bfdbe73
+index 0000000..4936b6a
 --- /dev/null
 +++ b/launcher/src/promo.rs
-@@ -0,0 +1,344 @@
+@@ -0,0 +1,559 @@
 +//! What stands where Sculk's ad used to: a rotation of our own cards.
 +//!
 +//! Shown one at a time, changed every [`DWELL_SECS`]:
@@ -2106,7 +1827,7 @@ index 0000000..bfdbe73
 +//! `pcv-wide.jpg`, `donate.png`; png/jpg/jpeg/webp/gif all work), so pictures change without a
 +//! rebuild. Nothing here reaches the network except the one GitHub search.
 +
-+use gpui::{div, img, prelude::*, px, Div, Image, ImageFormat, Stateful};
++use gpui::{div, img, prelude::*, px, AnimationExt as _, Div, Image, ImageFormat, Stateful};
 +use std::collections::HashMap;
 +use std::path::{Path, PathBuf};
 +use std::sync::{Arc, Mutex, OnceLock};
@@ -2118,7 +1839,15 @@ index 0000000..bfdbe73
 +pub const DWELL_SECS: u64 = 10;
 +
 +/// The cards, in order, with the caption under each.
-+const PICTURES: &[(&str, &str)] = &[("pcv", "PCV"), ("donate", "赞助作者 · 点击放大")];
++const PICTURES: &[(&str, &str)] = &[("pcv", "PCV · 点击打开仓库"), ("donate", "赞助作者 · 点击放大")];
++
++/// Where a card leads when it is not a payment code. Missing means the card does nothing.
++fn picture_link(name: &str) -> Option<&'static str> {
++    match name {
++        "pcv" => Some(horizon_addresses::PCV_GITHUB),
++        _ => None,
++    }
++}
 +
 +const EXTENSIONS: &[(&str, ImageFormat)] = &[
 +    ("png", ImageFormat::Png),
@@ -2294,6 +2023,162 @@ index 0000000..bfdbe73
 +    draw(id, width, false, secs, t, true)
 +}
 +
++/// One card's width in the rolling strip, and the gap after it.
++const CARD_W: f32 = 300.;
++const CARD_H: f32 = 150.;
++const CARD_GAP: f32 = 12.;
++
++/// The Servers page's strip: the cards laid out side by side and rolled left for ever.
++///
++/// Unlike [`banner`], which swaps one card for the next every ten seconds, this slides the whole
++/// row continuously — what "滚动横幅" asks for. The row is drawn twice and travels exactly one
++/// copy's width per cycle, so the end of the first copy meets the start of the second and the roll
++/// never jumps. `Animation::repeat` keeps it going without any timer of ours.
++pub fn marquee(id: &'static str, width: f32, t: &Theme) -> Stateful<Div> {
++    let t = *t;
++    let names: Vec<&'static str> = PICTURES
++        .iter()
++        .filter(|(prefix, _)| exists(prefix))
++        .map(|(prefix, _)| *prefix)
++        .collect();
++    let has_repo = REPO.lock().unwrap().is_some();
++    let count = names.len() + usize::from(has_repo);
++    if count == 0 {
++        return div().id(id).h(px(0.));
++    }
++    let one_copy = (CARD_W + CARD_GAP) * count as f32;
++    let seconds = (count as u64) * 6;
++    div()
++        .id(id)
++        .w(px(width))
++        .h(px(CARD_H + 26.))
++        .overflow_hidden()
++        .child(
++            div()
++                .id(gpui::ElementId::Name(format!("{id}-row").into()))
++                .relative()
++                .flex()
++                .with_animation(
++                    gpui::ElementId::Name(format!("{id}-roll").into()),
++                    gpui::Animation::new(Duration::from_secs(seconds)).repeat(),
++                    move |element, progress| {
++                        // 走一段、停一会儿：每张卡有一段静止时间，玩家才点得中。上游那种匀速
++                        // 滚动看着好，但卡片一直在动，鼠标按下去时它已经挪开了。
++                        let slots = count as f32;
++                        let per = 1.0 / slots;
++                        let index = (progress / per).floor().min(slots - 1.);
++                        let local = (progress / per - index).clamp(0., 1.);
++                        // 每格前 22% 的时间用来移动，剩下 78% 停住。
++                        let travel = (local / 0.22).min(1.);
++                        let eased = travel * travel * (3. - 2. * travel);
++                        element.left(px(-one_copy * (index + eased) / slots))
++                    },
++                )
++                .children(
++                    (0..count * 2).map(move |i| slide(i, i % count, &names, has_repo, t)),
++                ),
++        )
++}
++
++/// Card `index` in the strip, drawn as copy number `slot`: a picture with its caption, or GitHub's
++/// card last. The slot keeps every drawn card's element id distinct — the row is drawn twice.
++fn slide(
++    slot: usize,
++    index: usize,
++    names: &[&'static str],
++    has_repo: bool,
++    t: Theme,
++) -> gpui::AnyElement {
++    use gpui::IntoElement as _;
++    let frame = || {
++        div()
++            .w(px(CARD_W))
++            .pr(px(CARD_GAP))
++            .h(px(CARD_H))
++            .flex()
++            .flex_col()
++            .gap(px(6.))
++    };
++    if let Some(name) = names.get(index) {
++        let caption = PICTURES
++            .iter()
++            .find(|(prefix, _)| prefix == name)
++            .map(|(_, caption)| *caption)
++            .unwrap_or(*name);
++        let image = for_width(name, true).as_ref().and_then(load);
++        let mut card = frame().child(caption_line(caption, t));
++        if let Some(image) = image {
++            card = card.child(
++                div()
++                    .w(px(CARD_W - CARD_GAP))
++                    .h(px(CARD_H - 26.))
++                    .rounded(px(if t.glass { 10. } else { 0. }))
++                    .overflow_hidden()
++                    .child(img(image).max_w(px(CARD_W - CARD_GAP)).max_h(px(CARD_H - 26.))),
++            );
++        }
++        if *name == "donate" {
++            let code = payment_code();
++            return card
++                .id(gpui::ElementId::Name(format!("promo-slide-{slot}").into()))
++                .on_click(move |_: &gpui::ClickEvent, _, _| {
++                    if let Some(path) = code.as_ref() {
++                        open_path(path);
++                    }
++                })
++                .into_any_element();
++        }
++        if let Some(url) = picture_link(name) {
++            return card
++                .id(gpui::ElementId::Name(format!("promo-slide-{slot}").into()))
++                .on_click(move |_: &gpui::ClickEvent, _, cx| cx.open_url(url))
++                .into_any_element();
++        }
++        return card.into_any_element();
++    }
++    if !has_repo {
++        return frame().into_any_element();
++    }
++    let repo = REPO.lock().unwrap();
++    let Some(repo) = repo.as_ref() else {
++        return frame().into_any_element();
++    };
++    let url = repo.url.clone();
++    let detail = if repo.description.is_empty() {
++        format!("★ {}", repo.stars)
++    } else {
++        format!("{} · ★ {}", repo.description, repo.stars)
++    };
++    frame()
++        .id(gpui::ElementId::Name(format!("promo-slide-{slot}").into()))
++        .pr(px(CARD_GAP))
++        .p(px(12.))
++        .rounded(px(if t.glass { 10. } else { 0. }))
++        .bg(t.plate_soft)
++        .border_1()
++        .border_color(t.rule)
++        .on_click(move |_: &gpui::ClickEvent, _, cx| cx.open_url(&url))
++        .child(
++            crate::text(crate::theme::MICRO)
++                .text_color(t.muted)
++                .child("GitHub · Minecraft"),
++        )
++        .child(
++            div()
++                .text_size(px(14.))
++                .text_color(t.ink)
++                .child(repo.full_name.clone()),
++        )
++        .child(
++            div()
++                .text_size(px(12.5))
++                .line_height(px(17.))
++                .text_color(t.muted)
++                .child(detail),
++        )
++        .into_any_element()
++}
++
 +fn draw(
 +    id: &'static str,
 +    width: f32,
@@ -2408,6 +2293,57 @@ index 0000000..bfdbe73
 +        .arg("url.dll,FileProtocolHandler")
 +        .arg(path)
 +        .spawn();
++}
++
++/// A thin bar under every page: the promotion slot as a permanent strip, so it is in sight
++/// whichever page the player is on — including while the game is downloading, which is the moment
++/// they stare at the launcher longest.
++pub fn bar(t: &Theme) -> Stateful<Div> {
++    let t = *t;
++    let icon = picture("pcv").as_ref().and_then(load);
++    let mut bar = div()
++        .id("promo-bar")
++        .w_full()
++        .flex_none()
++        .h(px(52.))
++        .px(px(18.))
++        .flex()
++        .items_center()
++        .gap(px(12.))
++        .bg(t.plate_soft)
++        .cursor_pointer()
++        .child(
++            div()
++                .flex_none()
++                .w(px(30.))
++                .h(px(30.))
++                .rounded(px(6.))
++                .overflow_hidden()
++                .children(icon.map(|image| img(image).w(px(30.)).h(px(30.)))),
++        )
++        .child(
++            crate::text(crate::theme::MICRO)
++                .text_color(t.muted)
++                .child("推广"),
++        )
++        .child(
++            div()
++                .text_size(px(13.))
++                .text_color(t.ink)
++                .child("PCV · 一个只负责装框架的壳"),
++        )
++        .child(div().flex_1())
++        .child(
++            div()
++                .text_size(px(12.5))
++                .text_color(t.accent)
++                .child("打开 GitHub →"),
++        );
++    // 站内提供的 GitHub 地址只用于点开浏览器，不经过下载层，因此不走镜像。
++    bar = bar.on_click(|_: &gpui::ClickEvent, _, cx| {
++        cx.open_url(horizon_addresses::PCV_GITHUB);
++    });
++    bar
 +}
 +
 +/// The payment-code picture's path, ready to hand to the system viewer.

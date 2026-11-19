@@ -74,6 +74,8 @@ jobs:
           # 语言表整份覆盖：它改得太散（1371 → 1729 条），增量 diff 的上下文对不上上游新版本，
           # 而它本来就是一张完整表，直接给全文更可靠。
           cp files/launcher/lang/zh.json upstream/launcher/lang/zh.json
+          cp files/horizon-client/assets/horizon/lang/zh_cn.json \
+             upstream/crates/horizon-client/assets/horizon/lang/zh_cn.json
           ls -la upstream/launcher/assets/promo upstream/launcher/lang/zh.json
 
       # ── 构建 ────────────────────────────────────────────────────
