@@ -99,7 +99,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path out | Out-Null
           Copy-Item upstream/launcher/target/release/horizon-launcher.exe out/
-          Copy-Item README.md out/说明.txt -ErrorAction SilentlyContinue
+          # 文件名用 ASCII：旧版 shell 写中文名会变成乱码（解压出来是 ޻¦µÄ.txt）
+          Copy-Item README.md out/README.txt -ErrorAction SilentlyContinue
           Copy-Item assets/promo -Destination out/promo -Recurse -ErrorAction SilentlyContinue
           Compress-Archive -Path out/* -DestinationPath "Horizon-CN-${{ steps.upstream.outputs.tag }}.zip" -Force
 
