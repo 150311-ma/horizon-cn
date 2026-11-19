@@ -1,0 +1,111 @@
+name: Build Horizon CN
+
+# 每天检查上游有没有新版本；有就重新构建并发布。也可以手动点 Run workflow。
+on:
+  schedule:
+    # UTC 20:00 = 北京时间 04:00，这时候没人用
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── 上游版本 ────────────────────────────────────────────────
+      # 已经发过的版本记在 release 的 tag 里；和上游最新一致就跳过，省掉一次构建。
+      - name: 查上游最新版本
+        id: upstream
+        shell: bash
+        run: |
+          git ls-remote --tags --refs https://github.com/horizon-rust/horizon.git \
+            | sed 's|.*refs/tags/||' \
+            | grep -E '^launcher@[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -1 > tag.txt
+          echo "tag=$(cat tag.txt)" >> "$GITHUB_OUTPUT"
+          echo "上游最新：$(cat tag.txt)"
+
+      - name: 这个版本构建过吗
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.upstream.outputs.tag }}"
+          if gh release view "cn-$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "已经发过 cn-$TAG，跳过"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── 源码 ────────────────────────────────────────────────────
+      - name: 取上游源码
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/horizon-rust/horizon.git upstream
+          cd upstream
+          git sparse-checkout init --cone
+          git sparse-checkout set crates launcher packaging tools xtask .cargo mods docs nix
+          git checkout "${{ steps.upstream.outputs.tag }}"
+
+      - name: 打补丁
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        run: |
+          cd upstream
+          git apply --3way "$GITHUB_WORKSPACE/patches/horizon-cn.patch" \
+            || { echo "::error::补丁打不上，上游这个版本的代码变了"; git apply --reject --whitespace=nowarn "$GITHUB_WORKSPACE/patches/horizon-cn.patch" || true; find . -name '*.rej' -exec sh -c 'echo "--- {} ---"; head -40 "{}"' \; ; exit 1; }
+
+      # 推广位的图不在补丁里（二进制，diff 带不了），从本仓库复制过去
+      - name: 放推广图
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        run: |
+          mkdir -p upstream/launcher/assets/promo
+          cp assets/promo/* upstream/launcher/assets/promo/
+          ls -la upstream/launcher/assets/promo
+
+      # ── 构建 ────────────────────────────────────────────────────
+      - uses: Swatinem/rust-cache@v2
+        if: steps.check.outputs.build == 'true'
+        with:
+          workspaces: upstream/launcher
+
+      - name: 编译启动器
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        working-directory: upstream
+        run: |
+          # debug-assertions 关掉着色器预编译，因此不需要 fxc.exe，runner 上更稳
+          cargo build --manifest-path launcher/Cargo.toml --release \
+            --config 'profile.release.debug-assertions=true' 2>&1 | tail -30
+
+      - name: 打 zip
+        if: steps.check.outputs.build == 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item upstream/launcher/target/release/horizon-launcher.exe out/
+          Copy-Item README.md out/说明.txt -ErrorAction SilentlyContinue
+          Copy-Item assets/promo -Destination out/promo -Recurse -ErrorAction SilentlyContinue
+          Compress-Archive -Path out/* -DestinationPath "Horizon-CN-${{ steps.upstream.outputs.tag }}.zip" -Force
+
+      - name: 发布
+        if: steps.check.outputs.build == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.upstream.outputs.tag }}"
+          gh release create "cn-$TAG" "Horizon-CN-$TAG.zip" \
+            --repo "${{ github.repository }}" \
+            --title "Horizon 国产版 · $TAG" \
+            --notes "基于上游 $TAG 构建：下载与更新走国内镜像、界面完整中文、商店移除、推广位换成自己的轮播。
+          $(gh release view "$TAG" --repo horizon-rust/horizon --json body -q .body 2>/dev/null | head -40)" \
+            --latest
